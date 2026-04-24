@@ -1,12 +1,18 @@
 (function() {
   /* ══════════════════════════════════════════════════════════════
-     sch-combined.js v1.0.1 — Scholarships page injection.
+     sch-combined.js v1.0.2 — Scholarships page injection.
      ----
      v1.0.1 (2026-04-24): Hero "Watch Winner Stories" button —
        added click handler that smooth-scrolls to #winners with an
        80px offset (fixed nav height). Native href="#winners" was
        landing the section top under the nav, making the click
        appear broken.
+     v1.0.2 (2026-04-24): Fix v1.0.1 — the handler used
+       getElementById('winners') which collided with a Webflow
+       native "#winners" element left over at the top of the DOM
+       (offsetTop 0), so the scroll went nowhere. Now scopes the
+       target lookup to `#sch-root #winners` and uses
+       getBoundingClientRect + pageYOffset for absolute Y.
      ----
      Mirrors Donate / Pulse Summit / Mentorship Guide pattern: hide
      Webflow native chrome (this page ships its own nav + footer
@@ -540,16 +546,20 @@ function openLightbox(videoId) {
 
 
 /* --- Hero CTA: Watch Winner Stories → scroll to #winners with nav offset
-   Native href="#winners" was landing under the fixed nav (~64–80px),
-   which made the click look like it did nothing. Match the existing
-   pattern used by the "View all winners" link for #all-winners. */
+   (v1.0.1 first attempt used getElementById which collided with a
+   Webflow-native "#winners" element left over at the top of the DOM
+   — offsetTop 0 — so the scroll went nowhere. v1.0.2 scopes the lookup
+   to #sch-root AND uses getBoundingClientRect for page-absolute Y so
+   the offset math works regardless of offsetParent nesting.) */
 document.addEventListener('click', function(e){
-  var a = e.target && e.target.closest && e.target.closest('a[href="#winners"]');
+  var a = e.target && e.target.closest && e.target.closest('#sch-root a[href="#winners"], a[data-sch-scroll="winners"]');
   if (!a) return;
-  var sec = document.getElementById('winners');
+  var root = document.getElementById('sch-root');
+  var sec = root ? root.querySelector('#winners') : null;
   if (!sec) return;
   e.preventDefault();
-  window.scrollTo({ top: sec.offsetTop - 80, behavior: 'smooth' });
+  var absY = sec.getBoundingClientRect().top + window.pageYOffset;
+  window.scrollTo({ top: absY - 80, behavior: 'smooth' });
 });
 
 })();
