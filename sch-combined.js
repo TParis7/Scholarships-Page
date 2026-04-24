@@ -144,6 +144,30 @@ function esc(str) {
   });
 }
 
+/* -------- Remote winners feed (Option A — R8f, Apr 24) --------
+   Fetch winners.json from GitHub Pages on every page load. If it succeeds, replace
+   the embedded SCH_WINNERS fallback above and fire every registered re-render so
+   Recent Winners + All Past Winners pick up the new data. Thomas's monthly workflow:
+   edit winners.json in the GitHub repo, commit, done — no sch-combined.js push needed
+   for winner list updates. The embedded array remains as the failsafe if GitHub or
+   the fetch ever errors. Cache-buster uses today's date (not Date.now) so repeated
+   loads on the same day hit the CDN cache (not every load pulls fresh). */
+var SCH_REFRESH_CALLBACKS = [];
+function registerWinnersRefresh(fn) { SCH_REFRESH_CALLBACKS.push(fn); }
+(function fetchRemoteWinners() {
+  var url = 'https://tparis7.github.io/Scholarships-Page/winners.json?v=' + (new Date()).toISOString().slice(0,10);
+  try {
+    fetch(url, { cache: 'no-cache' })
+      .then(function(r) { return r.ok ? r.json() : Promise.reject('http ' + r.status); })
+      .then(function(data) {
+        if (!Array.isArray(data) || !data.length) return;
+        SCH_WINNERS = data;
+        SCH_REFRESH_CALLBACKS.forEach(function(fn) { try { fn(); } catch (e) { /* per-callback swallow */ } });
+      })
+      .catch(function() { /* silent — embedded SCH_WINNERS remains */ });
+  } catch (e) { /* older browsers w/o fetch: same silent fallback */ }
+})();
+
 /* -------- Winner Spotlight — YouTube grid + year filter -------- */
 (function() {
   var grid = document.getElementById('spotGrid');
@@ -214,6 +238,20 @@ function esc(str) {
 
   renderFilters();
   renderGrid();
+
+  // R8f: re-render when winners.json fetch resolves with fresh data
+  registerWinnersRefresh(function() {
+    withVideo = SCH_WINNERS.filter(function(w) { return w.v; });
+    withVideo.sort(function(a, b) {
+      if (a.y !== b.y) return b.y - a.y;
+      var order = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      return order.indexOf(b.m) - order.indexOf(a.m);
+    });
+    years = Array.from(new Set(withVideo.map(function(w){return w.y;}))).sort(function(a,b){return b-a;});
+    activeYear = 'all';
+    renderFilters();
+    renderGrid();
+  });
 })();
 
 /* -------- Lightbox -> YouTube direct-open --------
@@ -362,6 +400,17 @@ function openLightbox(videoId) {
 
   renderSide();
   renderList();
+
+  // R8f: re-render All Past Winners when winners.json fetch resolves with fresh data
+  registerWinnersRefresh(function() {
+    years = Array.from(new Set(SCH_WINNERS.map(function(w){return w.y;}))).sort(function(a,b){return b-a;});
+    counts = {};
+    SCH_WINNERS.forEach(function(w){ counts[w.y] = (counts[w.y]||0) + 1; });
+    activeYear = 'all';
+    page = 1;
+    renderSide();
+    renderList();
+  });
 })();
 
 /* -------- FAQ accordion (closed by default, one-at-a-time) -------- */
@@ -445,6 +494,10 @@ function openLightbox(videoId) {
       if (el.type === 'checkbox') { val = el.checked ? 'true' : 'false'; }
       else if (el.type === 'radio') { if (!el.checked) return; val = el.value; }
       else { val = el.value; }
+      // Webflow's native forms on /apply-for-scholarship double-encode the field key on
+      // the wire, but verified Apr 24 that Webflow accepts single-encoded keys too —
+      // Thomas's staging submission landed in the Forms panel with all fields mapped
+      // correctly via single-encoded. Keep single-encoding (simpler + proven working).
       parts.push('fields%5B' + encodeURIComponent(key) + '%5D=' + encodeURIComponent(val));
     });
     var body = parts.join('&');
