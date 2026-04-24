@@ -1,6 +1,13 @@
 (function() {
   /* ══════════════════════════════════════════════════════════════
-     sch-combined.js v1.0.0 — Scholarships page injection.
+     sch-combined.js v1.0.1 — Scholarships page injection.
+     ----
+     v1.0.1 (2026-04-24): Hero "Watch Winner Stories" button —
+       added click handler that smooth-scrolls to #winners with an
+       80px offset (fixed nav height). Native href="#winners" was
+       landing the section top under the nav, making the click
+       appear broken.
+     ----
      Mirrors Donate / Pulse Summit / Mentorship Guide pattern: hide
      Webflow native chrome (this page ships its own nav + footer
      inside #sch-root, then re-parents them to body-level), inject the
@@ -531,5 +538,18 @@ function openLightbox(videoId) {
   });
 })();
 
+
+/* --- Hero CTA: Watch Winner Stories → scroll to #winners with nav offset
+   Native href="#winners" was landing under the fixed nav (~64–80px),
+   which made the click look like it did nothing. Match the existing
+   pattern used by the "View all winners" link for #all-winners. */
+document.addEventListener('click', function(e){
+  var a = e.target && e.target.closest && e.target.closest('a[href="#winners"]');
+  if (!a) return;
+  var sec = document.getElementById('winners');
+  if (!sec) return;
+  e.preventDefault();
+  window.scrollTo({ top: sec.offsetTop - 80, behavior: 'smooth' });
+});
 
 })();
