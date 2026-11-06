@@ -100,6 +100,10 @@ var SCH_FAQS = [
     a: 'Any U.S.-based <strong>HS student (grades 9&ndash;12)</strong> or <strong>currently enrolled undergraduate college student</strong> who is active on the P3 app and embodies the <strong>#pulseofperseverance</strong> can apply. We look closely at authenticity, ambition, and engagement with your mentor &mdash; not grades or prestige.<br/><br/>Applications are due on the <strong>1st of every month</strong>. Scroll up to the <a href="#apply">application form</a> on this page and fill in every required field &mdash; including a 250-word essay, a 60-second video, and a link to your transcript.'
   },
   {
+    q: 'Do I need to read the Pulse of Perseverance book?',
+    a: 'No. Reading the book was part of the scholarship when it started in 2018, and some scholarship websites still list that older process. Today you apply only with the form on this page: a 250-word essay, a 60-second video and a link to your transcript. We don&rsquo;t accept applications by email or through the old Google Form.'
+  },
+  {
     q: 'Do I have to be on the P3 app to apply?',
     a: 'Yes. You must be registered on the P3 <a href="/download">mobile app</a> and connected to a mentor. Engaged mentees have a higher chance of being selected.'
   },
